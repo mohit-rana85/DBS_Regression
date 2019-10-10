@@ -1,0 +1,15 @@
+beh_file: 'Marc_ET_DATA.xlsx' # Excel file containing behavioral data
+data_columns: ['INFORM_ID', 'TOTAL MOTOR SCORE PERC CHANGE', 'TOTAL BODY CONTRALATERAL TREMOR  PERC CHANGE'] # column
+                                                        # names in the execel file
+fmri_file: 'fMRI_func_seed_AvgR'
+dmri_file: 'dMRI'
+img_ext: 'nii'
+data_method: ['dmri', 'fmri']
+roi_paths: ['ROIs_1mm', 'ROIs_2mm']
+roi_root_path: './ROIs'
+threshold: [20, 80]
+num_feature: [30, 50, 100, 150, 200]
+feature_sel: 'mi' # feature selection method Mutual information(MI) and Correlation coefficient (corr)
+n_jobs: 6 # number of parallel job workers for the sklearn
+cv: 10 # cross validation
+
