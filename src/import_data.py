@@ -111,14 +111,10 @@ class ImportData:
                 data_1mm = minmax_scale(np.array(img.get_data().flatten('C')).T, [-1, 1])
                 for ind, column in enumerate(pd_mask_data_dmri.columns):
                     data_com = np.extract(pd_mask_data_dmri[column].to_numpy() == 1, data_1mm)
-                    low_per = np.percentile(data_com, self.threshold_feature[0])
-                    high_per = np.percentile(data_com, self.threshold_feature[1])
-                    data_dmri = np.append(data_dmri, np.mean(data_com[np.where(data_com <= low_per)], axis=0))
-                    data_dmri = np.append(data_dmri, np.mean(data_com[np.logical_and(data_com > low_per,
-                                                                                     data_com > high_per)], axis=0))
-                    data_dmri = np.append(data_dmri, np.mean(data_com[np.where(data_com >= high_per)], axis=0))
-
-                    del low_per, high_per
+                    data_dmri = np.append(data_dmri, min(data_com))
+                    data_dmri = np.append(data_dmri, np.median(data_com))
+                    data_dmri = np.append(data_dmri, max(data_com))
+                    del data_com
                 index = [idx for idx, s in enumerate(filenames) if self.fmri_file in s][0]
                 del data_1mm
                 print('fMRI')
@@ -126,14 +122,12 @@ class ImportData:
                 data_2mm = minmax_scale(np.array(img.get_data().flatten('C')).T, [0, 1])
                 for ind, column in enumerate(pd_mask_data_fmri.columns):
                     data_com = np.extract(pd_mask_data_fmri[column].to_numpy() == 1, data_2mm)
-                    low_per = np.percentile(data_com, self.threshold_feature[0])
-                    high_per = np.percentile(data_com, self.threshold_feature[1])
-                    data_fmri = np.append(data_fmri, np.mean(data_com[np.where(data_com <= low_per)], axis=0))
-                    data_dmri = np.append(data_dmri, np.mean(data_com[np.logical_and(data_com > low_per,
-                                                                                     data_com > high_per)], axis=0))
-                    data_fmri = np.append(data_fmri, np.mean(data_com[np.where(data_com >= high_per)], axis=0))
+                    data_fmri = np.append(data_fmri, min(data_com))
+                    data_fmri = np.append(data_fmri, np.median(data_com))
+                    data_fmri = np.append(data_fmri, max(data_com))
+                    del data_2mm
                 data_dmri = np.concatenate((data_dmri, data_fmri), axis=0)
-                del data_2mm
+                del data_fmri
                 if subj_num == 0:
                     complete_data = data_dmri
                 else:
