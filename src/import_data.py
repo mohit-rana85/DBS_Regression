@@ -40,12 +40,11 @@ class ImportData:
                           f1.endswith(self.file_ext)]
             self.roi_num = len(mask_files)
             ii = 0
-            print('Importing Mask for DTI')
+            print('Importing Mask')
             print('Number of Mask files: {}'.format(len(mask_files)))
             mask_data_complete = pd.DataFrame()
             # 1mm mask files
             for mask in mask_files:
-
                 img = nib.load(os.path.join(self.roi_root_path, roi_path, mask))
                 mask_names = np.append(self.mask_names, mask[:-4])
                 if ii == 0:
@@ -58,6 +57,7 @@ class ImportData:
                     mask_data = np.zeros(shape=(img_size[0] * img_size[1] * img_size[2], 1), dtype=int)
                     data = img.get_data()
                     mask_data[np.nonzero(data.flatten('C'))] = 1
+
                 if len(mask_data_complete.columns) == 0:
                     mask_data_complete = pd.DataFrame(mask_data, columns=[mask[:-4]])
                 else:
@@ -83,6 +83,8 @@ class ImportData:
         pd_mask_data_fmri = pkl.load(f)
         f.close()
         del f, nn
+        col_list = list(pd_mask_data_fmri)
+        fmri_mask = pd_mask_data_fmri[col_list].sum(axis=1).to_numpy() > 1
         if self.data_method[0] == 'dmri':
             nn = [idx for idx, s in enumerate(filenames) if 'mask_data_{}'.format(self.data_method[0]) in s]
         else:
@@ -91,6 +93,8 @@ class ImportData:
         pd_mask_data_dmri = pkl.load(f)
         f.close()
         del f, nn
+        col_list = list(pd_mask_data_dmri)
+        dmri_mask = pd_mask_data_dmri[col_list].sum(axis=1).to_numpy() > 1
         subj_num = -1
         dirs = [d for d in os.listdir(self.data_dir) if os.path.isdir(os.path.join(self.data_dir, d))]
         score = np.zeros(shape=[1, len(self.data_column)-1], dtype=float)
@@ -107,8 +111,8 @@ class ImportData:
                 print("Subject: " + d)
                 index = [idx for idx, s in enumerate(filenames) if self.dmri_file in s][0]
                 print('dMRI')
-                img = nib.load(os.path.join(self.data_dir, d, filenames[index]))
-                data_1mm = minmax_scale(np.array(img.get_data().flatten('C')).T, [-1, 1])
+                img = nib.load(os.path.join(self.data_dir, d, filenames[index])).get_data().flatten('C')
+                data_1mm = minmax_scale(img, [-1, 1])
                 for ind, column in enumerate(pd_mask_data_dmri.columns):
                     data_com = np.extract(pd_mask_data_dmri[column].to_numpy() == 1, data_1mm)
                     data_dmri = np.append(data_dmri, min(data_com))
@@ -118,16 +122,16 @@ class ImportData:
                 index = [idx for idx, s in enumerate(filenames) if self.fmri_file in s][0]
                 del data_1mm
                 print('fMRI')
-                img = nib.load(os.path.join(self.data_dir, d, filenames[index]))
-                data_2mm = minmax_scale(np.array(img.get_data().flatten('C')).T, [0, 1])
+                img = nib.load(os.path.join(self.data_dir, d, filenames[index])).get_data().flatten('C')
+                data_2mm = minmax_scale(img, [-1, 1])
                 for ind, column in enumerate(pd_mask_data_fmri.columns):
                     data_com = np.extract(pd_mask_data_fmri[column].to_numpy() == 1, data_2mm)
                     data_fmri = np.append(data_fmri, min(data_com))
                     data_fmri = np.append(data_fmri, np.median(data_com))
                     data_fmri = np.append(data_fmri, max(data_com))
-                    del data_2mm
+                    del data_fmri
                 data_dmri = np.concatenate((data_dmri, data_fmri), axis=0)
-                del data_fmri
+                del data_2mm
                 if subj_num == 0:
                     complete_data = data_dmri
                 else:
