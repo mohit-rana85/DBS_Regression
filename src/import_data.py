@@ -21,6 +21,8 @@ class ImportData:
         self.roi_num = 0
         self.threshold_feature = config_para['threshold']
         self.output_dir = output_dir
+        self.data_mean_dmri = np.array([])
+        self.data_mean_fmri = np.array([])
 
     def extract_mask_data(self):
         # importing the Behavioral scores
@@ -73,6 +75,7 @@ class ImportData:
 
     def extract_brain_data(self, df):
         # loading the data files for each subject
+
         complete_data = np.array([])
         filenames = [f1 for f1 in os.listdir(self.output_dir) if f1.endswith('.pkl')]
         if self.data_method[0] == 'fmri':
@@ -129,8 +132,8 @@ class ImportData:
                     data_fmri = np.append(data_fmri, min(data_com))
                     data_fmri = np.append(data_fmri, np.median(data_com))
                     data_fmri = np.append(data_fmri, max(data_com))
-                    del data_fmri
                 data_dmri = np.concatenate((data_dmri, data_fmri), axis=0)
+                del data_fmri
                 del data_2mm
                 if subj_num == 0:
                     complete_data = data_dmri
@@ -144,5 +147,7 @@ class ImportData:
         pkl.dump(imported_data, f)
         f.close()
 
+    def __plot_whole_brain(self):
+        print('Printing score values and ')
 
 
